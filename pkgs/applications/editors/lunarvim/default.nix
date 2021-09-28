@@ -36,12 +36,16 @@ stdenv.mkDerivation rec {
 
     cp -r $(pwd) $out/lvim
 
-    # trailing slash very important for SPACEVIMDIR
-    makeWrapper "${nvim-customized}/bin/nvim" "$out/bin/lvim" \
-        --add-flags "-u $out/lvim/init.lua" \
-        --set LUNARVIM_RUNTIME_DIR "$out" \
-        --set LUNARVIM_CONFIG_DIR "/Users/nielsmentink/.config/lvim" \
-        --prefix PATH : ${lib.makeBinPath [ fzf git ripgrep ]}
+    export shim="$out/lvim/utils/bin/lvim"
+
+    substituteInPlace "$shim" \
+      --replace "exec nvim" "exec ${nvim-customized}/bin/nvim"
+
+    chmod +x "$shim"
+
+    makeWrapper "$shim" "$out/bin/lvim" \
+      --set LUNARVIM_RUNTIME_DIR "$out" \
+      --prefix PATH : ${lib.makeBinPath [ fzf git ripgrep ]}
     runHook postInstall
   '';
 }
